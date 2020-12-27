@@ -1,11 +1,12 @@
 import "reflect-metadata";
 import { __prod__ } from "./constants";
-import { Book } from "./entities/Book";
 import { createConnection } from "typeorm";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
+import { BookResolver } from "./resolvers/book";
+import { Book } from "./entities/Book";
 
 const main = async () => {
   await createConnection({
@@ -24,7 +25,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver],
+      resolvers: [HelloResolver, BookResolver],
       validate: false,
     }),
   });
