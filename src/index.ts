@@ -7,6 +7,8 @@ import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { BookResolver } from "./resolvers/book";
 import { Book } from "./entities/Book";
+import { User } from "./entities/User";
+import { UserResolver } from "./resolvers/user";
 
 const main = async () => {
   await createConnection({
@@ -18,14 +20,14 @@ const main = async () => {
     password: "mysecretpassword",
     logging: true,
     synchronize: true,
-    entities: [Book],
+    entities: [Book, User],
   });
 
   const app = express();
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, BookResolver],
+      resolvers: [HelloResolver, BookResolver, UserResolver],
       validate: false,
     }),
   });
