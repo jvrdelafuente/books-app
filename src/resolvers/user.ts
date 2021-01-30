@@ -1,13 +1,16 @@
 import { User } from "../entities/User";
 import {
   Arg,
+  Ctx,
   Field,
   InputType,
   Mutation,
   ObjectType,
+  Query,
   Resolver,
 } from "type-graphql";
 import { hash, verify } from "argon2";
+import { MyContext } from "src/types";
 
 @InputType()
 class UsernamePasswordInput {
@@ -38,6 +41,15 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  me(@Ctx() { req }: MyContext) {
+    if (!req.session.userId) {
+      return null;
+    }
+
+    return User.findOne(req.session.userId);
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput
@@ -86,7 +98,8 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg("options") options: UsernamePasswordInput
+    @Arg("options") options: UsernamePasswordInput,
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     const user = await User.findOne({ username: options.username });
     if (!user) {
@@ -100,6 +113,8 @@ export class UserResolver {
         errors: [{ field: "password", message: "Credentials are not valid" }],
       };
     }
+
+    req.session.userId = user.id;
 
     return { user };
   }

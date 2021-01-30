@@ -9,6 +9,10 @@ import { BookResolver } from "./resolvers/book";
 import { Book } from "./entities/Book";
 import { User } from "./entities/User";
 import { UserResolver } from "./resolvers/user";
+import redis from "redis";
+import session from "express-session";
+import ConnectRedis from "connect-redis";
+import { MyContext } from "./types";
 
 const main = async () => {
   await createConnection({
@@ -25,11 +29,34 @@ const main = async () => {
 
   const app = express();
 
+  const RedisStore = ConnectRedis(session);
+  const redisClient = redis.createClient();
+
+  app.use(
+    session({
+      name: "qid",
+      store: new RedisStore({
+        client: redisClient,
+        disableTouch: true,
+      }),
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+        httpOnly: true,
+        secure: __prod__, //cookie only works in https
+        sameSite: "lax", //csrf
+      },
+      saveUninitialized: false,
+      secret: "fdgurgtyrbehhdfbs435hbfi%7^",
+      resave: false,
+    })
+  );
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [HelloResolver, BookResolver, UserResolver],
       validate: false,
     }),
+    context: ({ req, res }): MyContext => ({ req, res }),
   });
 
   apolloServer.applyMiddleware({ app });
