@@ -67,7 +67,7 @@ export class UserResolver {
     }
 
     /* TODO - add better password validation */
-    if (options.password.length <= 3) {
+    if (options.password.length <= 2) {
       return {
         errors: [
           {
@@ -89,7 +89,7 @@ export class UserResolver {
       return { user };
     } catch (err) {
       //duplicate username error
-      if (err.code === "23505") {
+      if (err.detail.includes("already exist")) {
         return {
           errors: [{ field: "username", message: "Username already exists" }],
         };
